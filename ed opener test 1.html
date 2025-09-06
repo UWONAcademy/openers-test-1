@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>-ed Openers Fill-in Test</title>
+<style>
+  :root{
+    --bg1:#e9fbf5;
+    --bg2:#e9f9ff;
+    --card:#ffffff;
+    --ink:#18403d;
+    --muted:#5a7a76;
+    --brand:#16a085;
+    --brand2:#1f8cf0;
+    --shadow:0 20px 40px rgba(0,0,0,.08);
+    --radius:18px;
+    --good:#15b77b;
+    --bad:#e03b46;
+    --good-bg:#f3fffa;
+    --bad-bg:#fff5f6;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 800px at 10% 10%, var(--bg2), transparent) no-repeat,
+      radial-gradient(1200px 800px at 90% 80%, var(--bg1), #f5fffd) no-repeat;
+    font:16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color:var(--ink);
+  }
+  .wrap{max-width:980px;margin:32px auto;padding:16px}
+  .card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:26px; position:relative; overflow:hidden;
+  }
+  .ribbon{position:absolute; inset:0 0 auto 0; height:10px; background:linear-gradient(90deg, #1aa39a, #1f8cf0);}
+  h1{font-size:28px;margin:12px 0 6px}
+  .subtitle{color:var(--brand); font-weight:700}
+  .meta{display:flex; gap:18px; align-items:center; flex-wrap:wrap; color:var(--muted); margin-top:8px}
+  .bar{flex:1; min-width:160px; height:10px; background:#edf7ff; border-radius:999px; overflow:hidden}
+  .bar span{display:block; height:100%; width:0; background:linear-gradient(90deg,#16a085,#1f8cf0)}
+  .btn{
+    appearance:none; border:0; background:linear-gradient(135deg,#4cb8ff,#2ac4a5);
+    color:#fff; font-weight:800; padding:12px 18px; border-radius:14px; cursor:pointer;
+    box-shadow:0 10px 22px rgba(42,196,165,.25);
+  }
+  .btn.ghost{background:#eef9ff; color:#197e7e; box-shadow:none}
+  .btn.bad{background:#ff6b81}
+  .btn.good{background:#1ec38b}
+  .center{display:flex; flex-direction:column; align-items:flex-start; gap:16px}
+  .grid{display:grid; gap:16px}
+  @media(min-width:760px){ .grid{grid-template-columns:1fr 1fr} }
+  .q{ padding:16px; border:2px solid #e8f1f6; border-radius:14px; background:#fbfeff; transition:.2s }
+  .q.correct{border-color:#b5f0d2; background:var(--good-bg); color:#0b6a48}
+  .q.wrong{border-color:#ffb9c1; background:var(--bad-bg); color:var(--bad)}
+  .tail{color:inherit; font-weight:600}
+  .blank{
+    display:inline-flex; align-items:center; min-width:240px; min-height:46px;
+    padding:8px 10px; margin:0 6px; border-radius:12px; border:2px dashed #cfe5f4;
+    background:#f4fbff; color:#0a4; font-weight:700; cursor:pointer;
+  }
+  .blank.filled{border-style:solid; background:#f9fffb; color:#0a5137}
+  .bank{
+    margin-top:6px; display:flex; flex-wrap:wrap; gap:10px; padding:10px; border-radius:14px;
+    background:#f3fbff; border:1px solid #e5f2fb
+  }
+  .opt{
+    user-select:none; cursor:grab; padding:10px 12px; border-radius:12px; background:#fff;
+    border:1px solid #e2eef9; box-shadow:0 4px 10px rgba(0,0,0,.04); font-weight:700;
+  }
+  .opt.dragging{opacity:.6}
+  .opt.used{opacity:.5; cursor:not-allowed}
+  .muted{color:var(--muted)}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .result{font-size:18px; font-weight:800; color:#0b6; display:flex; gap:16px; align-items:center}
+  .timer{font-weight:800;color:#0b6}
+  .hidden{display:none !important}
+  .footer{margin:16px auto; text-align:center; color:#6a8; font-size:14px}
+  .cn{font-size:14px; color:#486; margin-top:6px}
+  /* 结果页卡片着色 */
+  .rev{ padding:16px; border-radius:14px; border:2px solid #e8f1f6; }
+  .rev.correct{border-color:#b5f0d2; background:var(--good-bg); color:#0b6a48}
+  .rev.wrong{border-color:#ffb9c1; background:var(--bad-bg); color:var(--bad)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Header -->
+    <section id="intro" class="card">
+      <div class="ribbon"></div>
+      <h1>UWON Academy -ed Openers Test</h1>
+      <div class="subtitle">Day 1 | Part A</div>
+      <div class="meta">
+        <div class="row"><strong>Time:</strong> <span class="timer"><span id="sec">0</span> second</span></div>
+        <div class="bar" aria-label="Progress"><span id="prog"></span></div>
+        <div><strong>Score:</strong> <span id="score">0</span></div>
+      </div>
+      <div class="center" style="margin-top:18px">
+        <button id="start" class="btn" aria-label="Start">Start</button>
+        <div class="muted">把正确的以-ed开头短语填入每个句子的开头（空白处）。支持拖拽、点击、替换与清除。</div>
+      </div>
+    </section>
+
+    <!-- Test -->
+    <section id="test" class="card hidden">
+      <div class="ribbon"></div>
+      <h2 style="margin:0 0 6px">Fill in the -ed Openers</h2>
+      <p class="muted" id="tip">已完成 <span id="done">0</span>/<span id="total">0</span> 题（点击空白可清除/更换）</p>
+      <div id="qList" class="grid" aria-live="polite"></div>
+      <h3 style="margin:16px 0 8px">短语选项</h3>
+      <div id="bank" class="bank" aria-label="Options bank"></div>
+      <div class="row" style="margin-top:12px">
+        <button id="submit" class="btn good">提交并评分</button>
+        <button id="shuffle" class="btn ghost">打乱选项</button>
+        <button id="restart" class="btn bad">重来</button>
+      </div>
+    </section>
+
+    <!-- Result -->
+    <section id="result" class="card hidden">
+      <div class="ribbon"></div>
+      <h2>结果</h2>
+      <p class="result">
+        ✔ 正确：<span id="ok">0</span> / <span id="all">0</span>
+        <span>|</span>
+        分数：<span id="finalScore">0</span>
+        <span>|</span>
+        用时：<span id="timeUsed">0</span> 秒
+      </p>
+      <div id="review" class="grid" style="margin-top:12px"></div>
+      <div class="row" style="margin-top:16px">
+        <button id="again" class="btn">再做一遍</button>
+        <button id="back" class="btn ghost">返回首页</button>
+      </div>
+    </section>
+
+    <div class="footer">© UWON Academy • 本地运行 • 支持拖拽/点击填空/替换 • 适配手机</div>
+  </div>
+
+<script>
+/* ===== 题库：九个句子 ===== */
+const QUESTIONS = [
+  { opener: "Scattered with sunlight,", tail: "the forest path shimmered like a river of gold.", cn: "洒满阳光，小径闪耀得仿佛一条金河。" },
+  { opener: "Abandoned and frightened,", tail: "the puppy hid beneath the broken bench.", cn: "被遗弃且惊恐万分，小狗躲在破长椅下。" },
+  { opener: "Dazed and confused as he regained consciousness,", tail: "he could not remember his own name.", cn: "他恢复意识时茫然困惑，甚至想不起自己的名字。" },
+  { opener: "Tormented by the horrifying monster,", tail: "the villagers fled to the mountains at dusk.", cn: "被可怕的怪物折磨，村民们在黄昏时分逃向群山。" },
+  { opener: "Filled with anxiety and dread,", tail: "she hesitated at the exam room door.", cn: "充满焦虑与恐惧，她在考场门口踌躇不前。" },
+  { opener: "Disappointed with their efforts,", tail: "the coach called for one more practice drill.", cn: "对他们的努力感到失望，教练要求再进行一次训练。" },
+  { opener: "Locked up deep inside the castle,", tail: "the prince counted the days by scratching the wall.", cn: "被关在城堡深处，王子通过在墙上刻痕来数日子。" },
+  { opener: "Exasperated and ready to give up,", tail: "he closed the laptop and walked outside for air.", cn: "恼怒至极、几欲放弃，他合上电脑走到户外透气。" },
+  { opener: "Energised after a good meal,", tail: "the team returned to the field with fresh determination.", cn: "美餐一顿后精力充沛，队员们带着新的决心重返赛场。" }
+];
+
+/* ===== 状态与工具 ===== */
+let startTime = 0, timerId = null;
+let score = 0;
+let filledCount = 0;
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const shuffle = arr => arr.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+
+function startTimer(){
+  startTime = Date.now();
+  clearInterval(timerId);
+  timerId = setInterval(()=>{
+    const sec = Math.floor((Date.now()-startTime)/1000);
+    $("#sec").textContent = sec;
+  }, 200);
+}
+function stopTimer(){ clearInterval(timerId); }
+
+/* ===== 构建测试 ===== */
+function buildTest(){
+  score = 0; filledCount = 0;
+  $("#score").textContent = 0;
+  $("#prog").style.width = "0%";
+  $("#done").textContent = "0";
+  $("#total").textContent = QUESTIONS.length;
+
+  // 题目（中文先隐藏）
+  const qList = $("#qList"); qList.innerHTML = "";
+  shuffle(QUESTIONS).forEach((q,idx)=>{
+    const qBox = document.createElement("div");
+    qBox.className = "q";
+    qBox.dataset.answer = q.opener;
+    qBox.dataset.index = idx;
+
+    qBox.innerHTML = `
+      <div class="tail">
+        <span class="blank" data-blank tabindex="0" aria-label="blank" data-value="">（把-ed短语拖到这里）</span>
+        ${q.tail}
+      </div>
+      <div class="cn hidden">${q.cn}</div>
+    `;
+    qList.appendChild(qBox);
+  });
+
+  // 选项池
+  const bank = $("#bank"); bank.innerHTML="";
+  const opts = shuffle(QUESTIONS.map(q=>q.opener));
+  opts.forEach(txt=>{
+    const opt = document.createElement("div");
+    opt.className = "opt"; opt.draggable = true; opt.textContent = txt;
+    addDragEvents(opt);
+    opt.addEventListener("click", ()=>togglePick(opt));
+    bank.appendChild(opt);
+  });
+
+  // 空白：拖拽、点击清除、键盘放置
+  $$("#qList [data-blank]").forEach(blank=>{
+    blank.addEventListener("dragover", e=>{ e.preventDefault(); });
+    blank.addEventListener("drop", e=>{
+      e.preventDefault();
+      const dragging = document.querySelector(".opt.dragging");
+      if(dragging) placeOption(blank, dragging); // 覆盖或放置
+    });
+    // 点击空白：如果有选中项则放置；否则清除已填
+    blank.addEventListener("click", ()=>{
+      const pick = document.querySelector(".opt.selected");
+      if(pick) placeOption(blank, pick);
+      else clearBlank(blank);
+    });
+  });
+}
+
+function addDragEvents(opt){
+  opt.addEventListener("dragstart", ()=>{ if(!opt.classList.contains("used")) opt.classList.add("dragging"); });
+  opt.addEventListener("dragend", ()=>{ opt.classList.remove("dragging"); });
+  opt.addEventListener("keydown", e=>{
+    if(e.key==="Enter"||e.key===" "){
+      e.preventDefault(); togglePick(opt);
+    }
+  });
+}
+
+function togglePick(opt){
+  if(opt.classList.contains("used")) return; // 正在被占用不可选
+  const cur = document.querySelector(".opt.selected");
+  if(cur && cur!==opt){ cur.classList.remove("selected"); cur.style.outline=""; }
+  opt.classList.toggle("selected");
+  opt.style.outline = opt.classList.contains("selected") ? "3px solid #73d6ff" : "";
+}
+
+function placeOption(blank, opt){
+  if(opt.classList.contains("used")) return;
+  // 如果空白已有值，先释放旧选项
+  if(blank.dataset.value){
+    releaseOptionByText(blank.dataset.value);
+  } else {
+    filledCount++;
+    $("#done").textContent = filledCount;
+  }
+  // 放置新值
+  blank.textContent = opt.textContent;
+  blank.dataset.value = opt.textContent;
+  blank.classList.add("filled");
+
+  // 标记选项占用
+  opt.classList.add("used"); opt.draggable=false; opt.style.cursor="not-allowed";
+  opt.classList.remove("selected"); opt.style.outline="";
+
+  updateProgress();
+}
+
+function clearBlank(blank){
+  // 清除空白当前值，恢复对应选项
+  if(!blank.dataset.value) return;
+  releaseOptionByText(blank.dataset.value);
+  blank.dataset.value = "";
+  blank.textContent = "（把-ed短语拖到这里）";
+  blank.classList.remove("filled");
+  filledCount = Math.max(0, filledCount - 1);
+  $("#done").textContent = filledCount;
+  updateProgress();
+}
+
+function releaseOptionByText(text){
+  const opt = $$("#bank .opt").find(o=>o.textContent.trim()===text.trim());
+  if(opt){
+    opt.classList.remove("used");
+    opt.draggable = true;
+    opt.style.cursor = "grab";
+    opt.style.opacity = "";
+  }
+}
+
+function updateProgress(){
+  const total = QUESTIONS.length;
+  const pct = (filledCount/total*100).toFixed(1);
+  $("#prog").style.width = pct + "%";
+}
+
+/* ===== 评分与复盘 ===== */
+function grade(){
+  let ok = 0;
+
+  // 测试页标记并显示中文
+  $$("#qList .q").forEach(q=>{
+    const ans = q.dataset.answer.trim();
+    const blank = q.querySelector("[data-blank]");
+    const fill = (blank.dataset.value||"").trim();
+    const right = ans===fill;
+
+    q.classList.remove("correct","wrong");
+    q.classList.add(right ? "correct" : "wrong");
+    q.querySelector(".cn").classList.remove("hidden");
+
+    if(right) ok++;
+  });
+
+  const usedSec = Math.floor((Date.now()-startTime)/1000);
+  const score = ok*10 + Math.max(0, 10 - Math.floor(usedSec/10)); // 时间奖励
+  $("#score").textContent = score;
+
+  // 结果页复盘：对/错标色（错题红色）
+  $("#ok").textContent = ok;
+  $("#all").textContent = QUESTIONS.length;
+  $("#finalScore").textContent = score;
+  $("#timeUsed").textContent = usedSec;
+
+  const review = $("#review"); review.innerHTML="";
+  // 为了标记对错，需要读取测试页每题的实际填空结果
+  const testItems = $$("#qList .q");
+  testItems.forEach((qBox, i)=>{
+    const ans = qBox.dataset.answer.trim();
+    const fill = (qBox.querySelector("[data-blank]").dataset.value||"").trim();
+    const isRight = ans===fill;
+
+    const data = findQuestionByOpener(ans); // 获取对应中文与尾句
+    const box = document.createElement("div");
+    box.className = "rev " + (isRight ? "correct" : "wrong");
+    box.innerHTML = `
+      <div><strong>正确开头：</strong>${ans}</div>
+      <div><strong>你的作答：</strong>${fill || "（未作答）"}</div>
+      <div style="margin-top:6px">${data.opener} ${data.tail}</div>
+      <div class="cn">${data.cn}</div>
+    `;
+    review.appendChild(box);
+  });
+
+  stopTimer();
+  $("#test").classList.add("hidden");
+  $("#result").classList.remove("hidden");
+}
+
+function findQuestionByOpener(opener){
+  return QUESTIONS.find(q=>q.opener===opener) || {opener, tail:"", cn:""};
+}
+
+/* ===== 交互 ===== */
+$("#start").addEventListener("click", ()=>{
+  $("#intro").classList.add("hidden");
+  $("#test").classList.remove("hidden");
+  buildTest();
+  startTimer();
+});
+$("#submit").addEventListener("click", grade);
+$("#shuffle").addEventListener("click", ()=>{
+  // 仅打乱未使用的选项
+  const opts = $$("#bank .opt").filter(x=>!x.classList.contains("used"));
+  const texts = shuffle(opts.map(x=>x.textContent));
+  opts.forEach((el,i)=>{ el.textContent=texts[i]; });
+});
+$("#restart").addEventListener("click", ()=>{ buildTest(); });
+$("#again").addEventListener("click", ()=>{
+  $("#result").classList.add("hidden");
+  $("#test").classList.remove("hidden");
+  buildTest(); startTimer();
+});
+$("#back").addEventListener("click", ()=>{
+  $("#result").classList.add("hidden");
+  $("#intro").classList.remove("hidden");
+  stopTimer();
+});
+
+/* 键盘：选中选项后，聚焦到空白按Enter可放置；在空白按Delete/Backspace清除 */
+document.addEventListener("keydown", e=>{
+  const focusBlank = document.activeElement?.dataset?.blank!==undefined ? document.activeElement : null;
+  if((e.key==="Enter" || e.key===" ") && focusBlank){
+    const pick = document.querySelector(".opt.selected");
+    if(pick){ e.preventDefault(); placeOption(focusBlank, pick); }
+  }
+  if((e.key==="Backspace" || e.key==="Delete") && focusBlank){
+    e.preventDefault(); clearBlank(focusBlank);
+  }
+});
+</script>
+</body>
+</html>
